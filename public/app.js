@@ -1,4 +1,4 @@
-const socket = io(); // Connects to the host that serves the page
+const socket = io("sister-chat-app-v2-web.railway.internal"); // Connects to the host that serves the page
 
 // UI Elements
 const loginModal = document.getElementById('login-modal');
@@ -36,14 +36,14 @@ const joinChat = () => {
     if (nickname) {
         myNickname = nickname;
         socket.emit('join', nickname);
-        
+
         loginModal.classList.add('opacity-0', 'pointer-events-none');
         setTimeout(() => {
             loginModal.classList.add('hidden');
             chatContainer.classList.remove('hidden');
             chatContainer.classList.add('flex');
             myNicknameDisplay.textContent = myNickname;
-            
+
             setTimeout(() => messageInput.focus(), 100);
         }, 300);
     } else {
@@ -129,7 +129,7 @@ const appendMessage = (data, isMine) => {
     metaInfo.textContent = `${data.nickname} • ${data.timestamp}`;
 
     const bubble = document.createElement('div');
-    
+
     // Style logic
     if (isMine) {
         bubble.className = 'bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-2 shadow-sm break-words w-full text-sm sm:text-base';
@@ -151,7 +151,7 @@ const appendMessage = (data, isMine) => {
     bubbleContainer.appendChild(metaInfo);
     bubbleContainer.appendChild(bubble);
     wrapper.appendChild(bubbleContainer);
-    
+
     chatBox.appendChild(wrapper);
     scrollToBottom();
 };
@@ -160,11 +160,11 @@ const appendMessage = (data, isMine) => {
 socket.on('systemMessage', (msg) => {
     const wrapper = document.createElement('div');
     wrapper.className = 'flex justify-center w-full my-3 animate-fade-in';
-    
+
     const bubble = document.createElement('div');
     bubble.className = 'bg-slate-200 text-slate-600 text-[11px] font-semibold px-4 py-1.5 rounded-full shadow-inner tracking-wide';
     bubble.textContent = msg;
-    
+
     wrapper.appendChild(bubble);
     chatBox.appendChild(wrapper);
     scrollToBottom();
