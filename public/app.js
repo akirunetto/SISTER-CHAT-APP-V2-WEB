@@ -1,6 +1,6 @@
-const socket = io("https://sister-chat-app-v2-web-production.up.railway.app", { 
-    transports: ['websocket', 'polling'], 
-    reconnectionAttempts: 5 
+const socket = io("https://sister-chat-app-v2-web.up.railway.app", {
+    transports: ['websocket', 'polling'],
+    reconnectionAttempts: 5
 });
 
 // UI Elements
