@@ -3,11 +3,12 @@ const socket = io("https://sister-chat-app-v2-web-production.up.railway.app", {
     reconnectionAttempts: 5
 });
 
-// Theme & Dark Mode Logic
+// Theme, Dark Mode & CRT Logic
 const themePink = document.getElementById('theme-pink');
 const themeGreen = document.getElementById('theme-green');
 const themeBlue = document.getElementById('theme-blue');
 const toggleDark = document.getElementById('toggle-dark');
+const toggleCrt = document.getElementById('toggle-crt');
 
 const applyTheme = (theme) => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -25,11 +26,22 @@ const applyDarkMode = (isDark) => {
     localStorage.setItem('chat_dark', isDark);
 };
 
+const applyCrt = (isCrt) => {
+    if (isCrt) {
+        document.body.classList.add('crt-active');
+    } else {
+        document.body.classList.remove('crt-active');
+    }
+    localStorage.setItem('chat_crt', isCrt);
+};
+
 // Load preferences on startup
 const savedTheme = localStorage.getItem('chat_theme') || 'pink';
 const savedDark = localStorage.getItem('chat_dark') === 'true';
+const savedCrt = localStorage.getItem('chat_crt') === 'true';
 applyTheme(savedTheme);
 applyDarkMode(savedDark);
+applyCrt(savedCrt);
 
 themePink.onclick = () => applyTheme('pink');
 themeGreen.onclick = () => applyTheme('green');
@@ -37,6 +49,10 @@ themeBlue.onclick = () => applyTheme('blue');
 toggleDark.onclick = () => {
     const isDark = document.documentElement.classList.contains('dark');
     applyDarkMode(!isDark);
+};
+toggleCrt.onclick = () => {
+    const isCrt = document.body.classList.contains('crt-active');
+    applyCrt(!isCrt);
 };
 
 // UI Elements
@@ -51,8 +67,13 @@ const emojiBtn = document.getElementById('emoji-btn');
 const emojiPicker = document.getElementById('emoji-picker');
 const locationBtn = document.getElementById('location-btn');
 const myNicknameDisplay = document.getElementById('my-nickname-display');
+const usersList = document.getElementById('users-list');
+const statusSelect = document.getElementById('status-select');
+const typingIndicator = document.getElementById('typing-indicator');
 
 let myNickname = '';
+let typingTimer;
+let activeTypers = new Set();
 
 const emojis = ['😀', '😂', '😍', '😭', '👍', '🙏', '🔥', '🎉', '🤔', '😎'];
 
@@ -60,7 +81,7 @@ const emojis = ['😀', '😂', '😍', '😭', '👍', '🙏', '🔥', '🎉', 
 emojis.forEach(emoji => {
     const btn = document.createElement('button');
     btn.textContent = emoji;
-    btn.className = 'win-btn w-8 h-8 flex items-center justify-center text-xl';
+    btn.className = 'win-btn w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-xl sm:text-2xl';
     btn.onclick = () => {
         messageInput.value += emoji;
         emojiPicker.classList.add('hidden');
@@ -92,6 +113,20 @@ nicknameInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') joinChat();
 });
 
+// Presence Toggle
+statusSelect.addEventListener('change', (e) => {
+    socket.emit('changeStatus', e.target.value);
+});
+
+// Typing Logic
+messageInput.addEventListener('input', () => {
+    socket.emit('typing');
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(() => {
+        socket.emit('stopTyping');
+    }, 1500);
+});
+
 // Toggle Emoji Picker
 emojiBtn.addEventListener('click', () => {
     emojiPicker.classList.toggle('hidden');
@@ -110,6 +145,8 @@ const sendMessage = () => {
     if (msg) {
         socket.emit('chatMessage', msg);
         messageInput.value = '';
+        socket.emit('stopTyping');
+        clearTimeout(typingTimer);
     }
 };
 
@@ -161,7 +198,9 @@ const appendMessage = (data, isMine) => {
     bubbleContainer.className = `max-w-[85%] sm:max-w-[70%] flex flex-col ${isMine ? 'items-end' : 'items-start'}`;
 
     const metaInfo = document.createElement('span');
-    metaInfo.className = 'text-[16px] text-[var(--win-text)] opacity-70 mb-1 px-1';
+    metaInfo.className = 'text-[14px] sm:text-[16px] text-[var(--win-text)] opacity-70 mb-1 px-1';
+    
+    // Server provides Strict WIB time string directly
     metaInfo.textContent = `${data.nickname} [${data.timestamp}]`;
 
     const bubble = document.createElement('div');
@@ -173,18 +212,18 @@ const appendMessage = (data, isMine) => {
         
         bubble.innerHTML = `
             <a href="${mapUrl}" target="_blank" class="block w-48 sm:w-64 cursor-pointer hover:bg-gray-200 transition-colors text-black bg-white">
-                <div class="h-24 flex items-center justify-center bg-[url('https://www.transparenttextures.com/patterns/pixels.png')] bg-gray-300 border-b-2 border-black">
-                    <span class="text-4xl hover:scale-125 transition-transform">📍</span>
+                <div class="h-20 sm:h-24 flex items-center justify-center bg-[url('https://www.transparenttextures.com/patterns/pixels.png')] bg-gray-300 border-b-2 border-black">
+                    <span class="text-3xl sm:text-4xl hover:scale-125 transition-transform">📍</span>
                 </div>
                 <div class="p-2">
-                    <div class="font-bold underline mb-1">MAP.EXE</div>
-                    <div class="text-base">LAT: ${data.lat.toFixed(4)}</div>
-                    <div class="text-base">LON: ${data.lon.toFixed(4)}</div>
+                    <div class="font-bold underline mb-1 text-sm sm:text-base">MAP.EXE</div>
+                    <div class="text-xs sm:text-sm">LAT: ${data.lat.toFixed(4)}</div>
+                    <div class="text-xs sm:text-sm">LON: ${data.lon.toFixed(4)}</div>
                 </div>
             </a>
         `;
     } else {
-        bubble.className = `border-2 border-black px-3 py-1 break-words w-full text-xl ${isMine ? 'bg-theme-bubbleMine text-[var(--win-text)]' : 'bg-theme-bubbleOther text-[var(--win-text)]'}`;
+        bubble.className = `border-2 border-black px-3 py-1 break-words w-full text-lg sm:text-xl ${isMine ? 'bg-theme-bubbleMine text-[var(--win-text)]' : 'bg-theme-bubbleOther text-[var(--win-text)]'}`;
         bubble.style.boxShadow = '3px 3px 0px rgba(0,0,0,1)';
         bubble.textContent = data.message;
     }
@@ -197,13 +236,26 @@ const appendMessage = (data, isMine) => {
     scrollToBottom();
 };
 
+const updateTypingIndicator = () => {
+    if (activeTypers.size === 0) {
+        typingIndicator.textContent = '';
+    } else {
+        const typersArray = Array.from(activeTypers);
+        if (typersArray.length === 1) {
+            typingIndicator.textContent = `${typersArray[0]} is typing...`;
+        } else {
+            typingIndicator.textContent = `${typersArray.join(', ')} are typing...`;
+        }
+    }
+};
+
 // Socket Listeners
 socket.on('systemMessage', (msg) => {
     const wrapper = document.createElement('div');
     wrapper.className = 'flex justify-center w-full my-3';
     
     const bubble = document.createElement('div');
-    bubble.className = 'bg-[var(--win-surface)] border-2 border-[var(--win-border-darker)] text-[var(--win-text)] text-[16px] px-3 py-1';
+    bubble.className = 'bg-[var(--win-surface)] border-2 border-[var(--win-border-darker)] text-[var(--win-text)] text-[14px] sm:text-[16px] px-3 py-1';
     bubble.textContent = `*** ${msg} ***`;
     
     wrapper.appendChild(bubble);
@@ -219,4 +271,38 @@ socket.on('chatMessage', (data) => {
 socket.on('locationShare', (data) => {
     const isMine = data.nickname === myNickname;
     appendMessage(data, isMine);
+});
+
+socket.on('chatHistory', (history) => {
+    chatBox.innerHTML = '';
+    history.forEach(data => {
+        const isMine = data.nickname === myNickname;
+        appendMessage(data, isMine);
+    });
+});
+
+socket.on('updateUserList', (users) => {
+    usersList.innerHTML = '';
+    users.forEach(user => {
+        let icon = '🟢';
+        if (user.status === 'Busy') icon = '🔴';
+        if (user.status === 'Idle') icon = '🌙';
+
+        const uDiv = document.createElement('div');
+        uDiv.className = 'flex items-center gap-2 mb-1';
+        uDiv.innerHTML = `<span class="text-xs sm:text-sm">${icon}</span> <span class="truncate">${user.nickname}</span>`;
+        usersList.appendChild(uDiv);
+    });
+});
+
+socket.on('typing', (nickname) => {
+    if (nickname !== myNickname) {
+        activeTypers.add(nickname);
+        updateTypingIndicator();
+    }
+});
+
+socket.on('stopTyping', (nickname) => {
+    activeTypers.delete(nickname);
+    updateTypingIndicator();
 });
