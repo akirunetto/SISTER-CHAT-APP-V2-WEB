@@ -1,7 +1,4 @@
-// GANTI URL DI BAWAH dengan Public Domain aslimu dari Railway
-const socket = io("https://sister-chat-app-v2-web.up.railway.app", {
-    transports: ['websocket', 'polling']
-});
+const socket = io("https://sister-chat-app-v2-web.up.railway.app", { transports: ['websocket', 'polling'], reconnectionAttempts: 5 });
 
 // UI Elements
 const loginModal = document.getElementById('login-modal');
