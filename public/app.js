@@ -202,20 +202,30 @@ let lastDateStr = '';
 const appendMessage = (data, isMine) => {
     // Parsing ISO String using Jakarta timezone
     const msgDate = new Date(data.timestamp);
-    const dateOpts = { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'long', day: 'numeric' };
-    const timeOpts = { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-    
-    const wibDate = msgDate.toLocaleDateString('id-ID', dateOpts);
-    let wibTime = msgDate.toLocaleTimeString('en-GB', timeOpts); // en-GB guarantees HH:MM:SS format without AM/PM
-    wibTime = wibTime.replace(/\./g, ':'); // Just in case it uses dot for separator
+    let wibDate = '';
+    let wibTime = data.timestamp; // Fallback to raw string if old format
 
-    // Date Separator UI
-    if (wibDate !== lastDateStr) {
-        lastDateStr = wibDate;
-        const dateWrapper = document.createElement('div');
-        dateWrapper.className = 'flex justify-center w-full my-4';
-        dateWrapper.innerHTML = `<div class="bg-[var(--titlebar-color)] text-[var(--titletext-color)] px-4 py-1 text-sm sm:text-base font-bold border-2 border-[var(--win-border-darker)] shadow-[2px_2px_0px_rgba(0,0,0,1)]">${wibDate}</div>`;
-        chatBox.appendChild(dateWrapper);
+    // Check if timestamp is a valid parsable Date (ISO string)
+    if (!isNaN(msgDate.getTime())) {
+        const dateOpts = { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'long', day: 'numeric' };
+        const timeOpts = { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+        
+        wibDate = msgDate.toLocaleDateString('id-ID', dateOpts);
+        wibTime = msgDate.toLocaleTimeString('en-GB', timeOpts).replace(/\./g, ':');
+
+        // Date Separator UI
+        if (wibDate !== lastDateStr) {
+            lastDateStr = wibDate;
+            const dateWrapper = document.createElement('div');
+            dateWrapper.className = 'flex justify-center w-full my-4';
+            dateWrapper.innerHTML = `<div class="bg-[var(--titlebar-color)] text-[var(--titletext-color)] px-4 py-1 text-sm sm:text-base font-bold border-2 border-[var(--win-border-darker)] shadow-[2px_2px_0px_rgba(0,0,0,1)]">${wibDate}</div>`;
+            chatBox.appendChild(dateWrapper);
+        }
+    } else {
+        // If it's the old format (just HH.MM.SS), format it nicely with colons if needed
+        if (typeof wibTime === 'string') {
+            wibTime = wibTime.replace(/\./g, ':');
+        }
     }
 
     const wrapper = document.createElement('div');
