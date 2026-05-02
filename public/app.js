@@ -17,10 +17,10 @@ const applyTheme = (theme) => {
 const applyDarkMode = (isDark) => {
     if (isDark) {
         document.documentElement.classList.add('dark');
-        toggleDark.textContent = '☀️';
+        toggleDark.innerHTML = '☀️ <span class="hidden sm:inline">Light Mode</span>';
     } else {
         document.documentElement.classList.remove('dark');
-        toggleDark.textContent = '🌙';
+        toggleDark.innerHTML = '🌙 <span class="hidden sm:inline">Dark Mode</span>';
     }
     localStorage.setItem('chat_dark', isDark);
 };
