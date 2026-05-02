@@ -50,6 +50,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('chatMessage', (msg) => {
+    if (!socket.nickname) return;
     const timestamp = getWIBTime();
     const msgData = {
       nickname: socket.nickname,
@@ -66,6 +67,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('locationShare', (coords) => {
+    if (!socket.nickname) return;
     const timestamp = getWIBTime();
     const msgData = {
       nickname: socket.nickname,
@@ -83,6 +85,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('changeStatus', (status) => {
+      if (!socket.nickname) return;
       if (users.has(socket.id)) {
           const user = users.get(socket.id);
           user.status = status;
@@ -92,15 +95,13 @@ io.on('connection', (socket) => {
   });
 
   socket.on('typing', () => {
-      if (socket.nickname) {
-          socket.broadcast.emit('typing', socket.nickname);
-      }
+      if (!socket.nickname) return;
+      socket.broadcast.emit('typing', socket.nickname);
   });
 
   socket.on('stopTyping', () => {
-      if (socket.nickname) {
-          socket.broadcast.emit('stopTyping', socket.nickname);
-      }
+      if (!socket.nickname) return;
+      socket.broadcast.emit('stopTyping', socket.nickname);
   });
 
   socket.on('disconnect', () => {

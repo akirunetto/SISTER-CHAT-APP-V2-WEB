@@ -1,6 +1,7 @@
 const socket = io("https://sister-chat-app-v2-web-production.up.railway.app", {
     transports: ['websocket', 'polling'],
-    reconnectionAttempts: 5
+    reconnectionAttempts: 5,
+    autoConnect: false // Do not connect to server until nickname is provided
 });
 
 // Theme, Dark Mode & CRT Logic
@@ -93,8 +94,13 @@ emojis.forEach(emoji => {
 // Join Chat
 const joinChat = () => {
     const nickname = nicknameInput.value.trim();
+    const loginError = document.getElementById('login-error');
+    
     if (nickname) {
         myNickname = nickname;
+        loginError.classList.add('hidden');
+        
+        socket.connect(); // Connect only after nickname is provided
         socket.emit('join', nickname);
 
         loginModal.classList.add('hidden');
@@ -104,7 +110,8 @@ const joinChat = () => {
 
         setTimeout(() => messageInput.focus(), 100);
     } else {
-        alert("Please enter a nickname.");
+        loginError.classList.remove('hidden');
+        nicknameInput.focus();
     }
 };
 
