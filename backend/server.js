@@ -35,7 +35,8 @@ io.on('connection', (socket) => {
     io.emit('chatMessage', {
       nickname: socket.nickname,
       message: msg,
-      timestamp: timestamp
+      timestamp: timestamp,
+      type: 'chat'
     });
   });
 
@@ -47,7 +48,8 @@ io.on('connection', (socket) => {
       nickname: socket.nickname,
       lat: coords.lat,
       lon: coords.lon,
-      timestamp: timestamp
+      timestamp: timestamp,
+      type: 'location'
     });
   });
 

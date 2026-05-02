@@ -142,12 +142,36 @@ const appendMessage = (data, isMine) => {
     }
 
     if (data.type === 'location') {
-        const link = document.createElement('a');
-        link.href = `https://www.google.com/maps?q=${data.lat},${data.lon}`;
-        link.target = '_blank';
-        link.className = `flex items-center gap-2 hover:underline ${isMine ? 'text-white' : 'text-blue-600 font-semibold'}`;
-        link.innerHTML = `<span class="text-lg">📍</span> Shared a location`;
-        bubble.appendChild(link);
+        // Hapus padding bawaan dan ubah style bubble khusus untuk location preview
+        bubble.className = `overflow-hidden rounded-2xl ${isMine ? 'rounded-tr-sm bg-blue-600 border border-blue-500' : 'rounded-tl-sm bg-white border border-slate-200'} shadow-md flex flex-col w-60 sm:w-64 transform transition hover:shadow-lg`;
+        
+        const mapUrl = `https://www.google.com/maps?q=${data.lat},${data.lon}`;
+        
+        bubble.innerHTML = `
+            <a href="${mapUrl}" target="_blank" class="block w-full cursor-pointer group relative">
+                <!-- Peta Mockup / Preview Area -->
+                <div class="h-32 bg-slate-200 w-full relative overflow-hidden flex items-center justify-center">
+                    <div class="absolute inset-0 opacity-50 bg-[url('https://www.transparenttextures.com/patterns/cartographer.png')]"></div>
+                    <div class="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-emerald-400/20 mix-blend-multiply"></div>
+                    
+                    <!-- Pin Animasi -->
+                    <div class="z-10 transform group-hover:-translate-y-2 group-hover:scale-110 transition duration-300 drop-shadow-xl flex flex-col items-center">
+                        <span class="text-4xl">📍</span>
+                        <div class="w-4 h-1 bg-black/20 rounded-full mt-1 blur-[1px]"></div>
+                    </div>
+                </div>
+                
+                <!-- Keterangan Bawah -->
+                <div class="p-3 ${isMine ? 'bg-blue-600 text-white' : 'bg-white text-slate-800'} border-t ${isMine ? 'border-blue-500' : 'border-slate-100'}">
+                    <div class="font-bold text-sm mb-0.5 flex items-center gap-1.5">
+                        <span class="text-emerald-500">🌍</span> Location
+                    </div>
+                    <div class="text-[11px] opacity-80 truncate">
+                        ${data.lat.toFixed(5)}, ${data.lon.toFixed(5)}
+                    </div>
+                </div>
+            </a>
+        `;
     } else {
         bubble.textContent = data.message;
     }
