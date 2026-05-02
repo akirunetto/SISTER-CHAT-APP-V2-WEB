@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retro Web Chat 98</title>
-    
+    <title>A5 ChatRoom</title>
+
     <!-- Google Fonts: VT323 for Retro Pixel Aesthetic -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -37,12 +38,12 @@
     <style>
         :root {
             /* Pink Default */
-            --bg-color: #fbcfe8; 
+            --bg-color: #fbcfe8;
             --titlebar-color: #db2777;
             --titletext-color: #ffffff;
             --bubble-mine-bg: #fdf2f8;
             --bubble-other-bg: #ffffff;
-            
+
             /* Windows Core */
             --win-border-light: #ffffff;
             --win-border-dark: #838383;
@@ -108,7 +109,7 @@
             border-right-color: var(--win-border-darker);
             background-color: var(--win-surface);
         }
-        
+
         .win-border-inner {
             border: 2px solid;
             border-top-color: var(--win-border-dark);
@@ -117,7 +118,11 @@
             border-right-color: var(--win-border-light);
             background: #ffffff;
         }
-        html.dark .win-border-inner { background: #121212; color: #fff; }
+
+        html.dark .win-border-inner {
+            background: #121212;
+            color: #fff;
+        }
 
         .win-btn {
             border: 2px solid;
@@ -128,6 +133,7 @@
             background-color: var(--win-surface);
             color: var(--win-text);
         }
+
         .win-btn:active {
             border-top-color: var(--win-border-darker);
             border-left-color: var(--win-border-darker);
@@ -140,9 +146,16 @@
         }
 
         /* Custom Retro Scrollbar */
-        #chat-box::-webkit-scrollbar { width: 14px; }
-        #chat-box::-webkit-scrollbar-track { background: var(--win-surface); border-left: 1px solid var(--win-border-darker); }
-        #chat-box::-webkit-scrollbar-thumb { 
+        #chat-box::-webkit-scrollbar {
+            width: 14px;
+        }
+
+        #chat-box::-webkit-scrollbar-track {
+            background: var(--win-surface);
+            border-left: 1px solid var(--win-border-darker);
+        }
+
+        #chat-box::-webkit-scrollbar-thumb {
             background: var(--win-surface);
             border: 2px solid;
             border-top-color: var(--win-border-light);
@@ -150,13 +163,14 @@
             border-bottom-color: var(--win-border-darker);
             border-right-color: var(--win-border-darker);
         }
-        
+
         .title-bar {
             background: var(--titlebar-color);
             color: var(--titletext-color);
         }
     </style>
 </head>
+
 <body class="font-pixel h-screen flex flex-col p-1 sm:p-2 md:p-8 overflow-hidden text-lg sm:text-xl">
 
     <!-- Login/Nickname Modal -->
@@ -167,10 +181,12 @@
                 <button class="win-btn px-2 py-0 text-sm bg-gray-300 text-black">X</button>
             </div>
             <div class="p-4 sm:p-6 flex flex-col gap-4 text-center">
-                <p class="text-xl sm:text-2xl">Welcome to WebChat 98</p>
+                <p class="text-xl sm:text-2xl">Welcome to A5 ChatRoom</p>
                 <div class="flex flex-col text-left">
                     <label for="nickname-input" class="mb-1">Nickname:</label>
-                    <input type="text" id="nickname-input" class="win-border-inner px-2 py-1 focus:outline-none text-lg sm:text-xl w-full" placeholder="_" autocomplete="off">
+                    <input type="text" id="nickname-input"
+                        class="win-border-inner px-2 py-1 focus:outline-none text-lg sm:text-xl w-full" placeholder="_"
+                        autocomplete="off">
                 </div>
                 <button id="join-btn" class="win-btn py-1 px-6 mx-auto mt-2 text-lg">Connect</button>
             </div>
@@ -180,53 +196,72 @@
     <!-- Main Chat UI (Hidden by default) -->
     <div id="chat-container" class="hidden flex-col h-full max-w-4xl mx-auto w-full win-border p-1 relative">
         <!-- Title Bar -->
-        <header class="title-bar px-2 py-1 flex justify-between items-center font-bold select-none cursor-default text-base sm:text-lg">
+        <header
+            class="title-bar px-2 py-1 flex justify-between items-center font-bold select-none cursor-default text-base sm:text-lg">
             <div class="flex items-center gap-2 truncate">
                 <span class="text-yellow-300 flex-shrink-0">💬</span>
-                <span class="truncate">Internet Chat Room v1.0</span>
+                <span class="truncate">A5 ChatRoom</span>
             </div>
             <div class="flex gap-1 flex-shrink-0">
-                <button class="win-btn w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm font-bold bg-gray-300 text-black">_</button>
-                <button class="win-btn w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm font-bold bg-gray-300 text-black">□</button>
-                <button class="win-btn w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm font-bold bg-gray-300 text-black">X</button>
+                <button
+                    class="win-btn w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm font-bold bg-gray-300 text-black">_</button>
+                <button
+                    class="win-btn w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm font-bold bg-gray-300 text-black">□</button>
+                <button
+                    class="win-btn w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm font-bold bg-gray-300 text-black">X</button>
             </div>
         </header>
 
         <!-- Menu Bar -> Converted to Theme Picker -->
-        <div class="flex flex-wrap items-center gap-2 sm:gap-4 px-2 py-1.5 border-b-2 border-[var(--win-border-darker)] text-base sm:text-lg mb-1 bg-[var(--win-surface)] text-[var(--win-text)]">
+        <div
+            class="flex flex-wrap items-center gap-2 sm:gap-4 px-2 py-1.5 border-b-2 border-[var(--win-border-darker)] text-base sm:text-lg mb-1 bg-[var(--win-surface)] text-[var(--win-text)]">
             <span class="mr-1 hidden sm:inline">Theme:</span>
-            <button id="theme-pink" class="win-btn px-2 py-0.5 bg-[#fbcfe8] hover:bg-[#f9a8d4] text-black text-sm sm:text-base">Pink</button>
-            <button id="theme-green" class="win-btn px-2 py-0.5 bg-[#bbf7d0] hover:bg-[#86efac] text-black text-sm sm:text-base">Green</button>
-            <button id="theme-blue" class="win-btn px-2 py-0.5 bg-[#bfdbfe] hover:bg-[#93c5fd] text-black text-sm sm:text-base">Blue</button>
-            
+            <button id="theme-pink"
+                class="win-btn px-2 py-0.5 bg-[#fbcfe8] hover:bg-[#f9a8d4] text-black text-sm sm:text-base">Pink</button>
+            <button id="theme-green"
+                class="win-btn px-2 py-0.5 bg-[#bbf7d0] hover:bg-[#86efac] text-black text-sm sm:text-base">Green</button>
+            <button id="theme-blue"
+                class="win-btn px-2 py-0.5 bg-[#bfdbfe] hover:bg-[#93c5fd] text-black text-sm sm:text-base">Blue</button>
+
             <span class="mx-1 text-slate-500">|</span>
-            <button id="toggle-dark" class="win-btn px-2 py-0.5 text-sm sm:text-base" title="Toggle Dark Mode">🌙 <span class="hidden sm:inline">Dark Mode</span></button>
+            <button id="toggle-dark" class="win-btn px-2 py-0.5 text-sm sm:text-base" title="Toggle Dark Mode">🌙 <span
+                    class="hidden sm:inline">Dark Mode</span></button>
         </div>
-        
-        <div class="px-2 py-1 text-sm sm:text-lg bg-theme-bg border-2 border-[var(--win-border-darker)] mb-1 flex justify-between items-center">
-            <span class="truncate">Status: <span class="text-green-600 dark:text-green-400 font-bold">Online</span></span>
+
+        <div
+            class="px-2 py-1 text-sm sm:text-lg bg-theme-bg border-2 border-[var(--win-border-darker)] mb-1 flex justify-between items-center">
+            <span class="truncate">Status: <span
+                    class="text-green-600 dark:text-green-400 font-bold">Online</span></span>
             <span class="truncate ml-2 text-right">User: <span id="my-nickname-display" class="font-bold"></span></span>
         </div>
 
         <!-- Chat Box -->
-        <div id="chat-box" class="flex-1 overflow-y-auto p-2 sm:p-4 win-border-inner bg-[var(--bg-color)] space-y-3 sm:space-y-4 mb-2">
+        <div id="chat-box"
+            class="flex-1 overflow-y-auto p-2 sm:p-4 win-border-inner bg-[var(--bg-color)] space-y-3 sm:space-y-4 mb-2">
             <!-- Messages will be injected here -->
         </div>
 
         <!-- Emoji Picker (Floating) -->
-        <div id="emoji-picker" class="hidden absolute bottom-16 sm:bottom-20 left-2 win-border p-2 grid grid-cols-5 gap-1 sm:gap-2 z-20 bg-[var(--win-surface)]">
+        <div id="emoji-picker"
+            class="hidden absolute bottom-16 sm:bottom-20 left-2 win-border p-2 grid grid-cols-5 gap-1 sm:gap-2 z-20 bg-[var(--win-surface)]">
             <!-- Emojis injected via JS -->
         </div>
 
         <!-- Input Area -->
         <footer class="flex items-center gap-1 sm:gap-2">
-            <button id="emoji-btn" class="win-btn px-2 sm:px-3 py-1 flex-shrink-0 text-base sm:text-xl" title="Emoji">😊</button>
-            <button id="location-btn" class="win-btn px-2 sm:px-3 py-1 flex-shrink-0 text-base sm:text-xl" title="Share Location">📍</button>
-            <input type="text" id="message-input" class="flex-1 win-border-inner min-w-0 px-2 py-1 focus:outline-none text-base sm:text-xl h-full" placeholder="Type message..." autocomplete="off">
-            <button id="send-btn" class="win-btn px-4 sm:px-6 py-1 flex-shrink-0 font-bold text-base sm:text-xl">Send</button>
+            <button id="emoji-btn" class="win-btn px-2 sm:px-3 py-1 flex-shrink-0 text-base sm:text-xl"
+                title="Emoji">😊</button>
+            <button id="location-btn" class="win-btn px-2 sm:px-3 py-1 flex-shrink-0 text-base sm:text-xl"
+                title="Share Location">📍</button>
+            <input type="text" id="message-input"
+                class="flex-1 win-border-inner min-w-0 px-2 py-1 focus:outline-none text-base sm:text-xl h-full"
+                placeholder="Type message..." autocomplete="off">
+            <button id="send-btn"
+                class="win-btn px-4 sm:px-6 py-1 flex-shrink-0 font-bold text-base sm:text-xl">Send</button>
         </footer>
     </div>
 
     <script src="/app.js"></script>
 </body>
+
 </html>
