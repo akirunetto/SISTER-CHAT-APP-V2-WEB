@@ -62,6 +62,7 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+// Mengikat ke 0.0.0.0 SANGAT PENTING untuk deployment Railway agar port bisa di-expose dengan benar
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server listening on port ${PORT} at 0.0.0.0`);
 });
