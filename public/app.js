@@ -1,6 +1,6 @@
+// GANTI URL DI BAWAH dengan Public Domain aslimu dari Railway
 const socket = io("https://sister-chat-app-v2-web.up.railway.app", {
-    // ⚠️ GANTI 'sister-chat-app-v2-web.up.railway.app' dengan Public Domain dari Railway-mu
-    transports: ['websocket', 'polling'] // Memastikan koneksi tidak diblokir oleh beberapa jenis proxy
+    transports: ['websocket', 'polling']
 });
 
 // UI Elements

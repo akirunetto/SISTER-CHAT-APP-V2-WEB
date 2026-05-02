@@ -4,13 +4,16 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 
 const app = express();
+
+// 1. Izinkan CORS untuk API Express biasa (jika diperlukan)
 app.use(cors());
 
 const server = http.createServer(app);
 
+// 2. Izinkan CORS spesifik untuk koneksi Socket.IO (SANGAT PENTING)
 const io = new Server(server, {
   cors: {
-    origin: "*", // Enable CORS for all origins
+    origin: "*", // Menerima koneksi dari domain Vercel mana pun
     methods: ["GET", "POST"]
   }
 });
