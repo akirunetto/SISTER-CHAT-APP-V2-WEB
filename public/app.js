@@ -1,4 +1,4 @@
-const socket = io("sister-chat-app-v2-web.railway.internal"); // Connects to the host that serves the page
+const socket = io("https://sister-chat-app-v2-web.up.railway.app"); // ⚠️ GANTI dengan Public Domain dari Railway (bukan .internal)
 
 // UI Elements
 const loginModal = document.getElementById('login-modal');
