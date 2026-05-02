@@ -196,8 +196,28 @@ const scrollToBottom = () => {
     chatBox.scrollTop = chatBox.scrollHeight;
 };
 
+let lastDateStr = '';
+
 // Helper: Create Message Bubble (Retro Blocky Style)
 const appendMessage = (data, isMine) => {
+    // Parsing ISO String using Jakarta timezone
+    const msgDate = new Date(data.timestamp);
+    const dateOpts = { timeZone: 'Asia/Jakarta', year: 'numeric', month: 'long', day: 'numeric' };
+    const timeOpts = { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+    
+    const wibDate = msgDate.toLocaleDateString('id-ID', dateOpts);
+    let wibTime = msgDate.toLocaleTimeString('en-GB', timeOpts); // en-GB guarantees HH:MM:SS format without AM/PM
+    wibTime = wibTime.replace(/\./g, ':'); // Just in case it uses dot for separator
+
+    // Date Separator UI
+    if (wibDate !== lastDateStr) {
+        lastDateStr = wibDate;
+        const dateWrapper = document.createElement('div');
+        dateWrapper.className = 'flex justify-center w-full my-4';
+        dateWrapper.innerHTML = `<div class="bg-[var(--titlebar-color)] text-[var(--titletext-color)] px-4 py-1 text-sm sm:text-base font-bold border-2 border-[var(--win-border-darker)] shadow-[2px_2px_0px_rgba(0,0,0,1)]">${wibDate}</div>`;
+        chatBox.appendChild(dateWrapper);
+    }
+
     const wrapper = document.createElement('div');
     wrapper.className = `flex w-full ${isMine ? 'justify-end' : 'justify-start'} mb-2`;
 
@@ -207,8 +227,8 @@ const appendMessage = (data, isMine) => {
     const metaInfo = document.createElement('span');
     metaInfo.className = 'text-[14px] sm:text-[16px] text-[var(--win-text)] opacity-70 mb-1 px-1';
     
-    // Server provides Strict WIB time string directly
-    metaInfo.textContent = `${data.nickname} [${data.timestamp}]`;
+    // Strict WIB time format
+    metaInfo.textContent = `${data.nickname} [${wibTime}]`;
 
     const bubble = document.createElement('div');
 
@@ -282,6 +302,7 @@ socket.on('locationShare', (data) => {
 
 socket.on('chatHistory', (history) => {
     chatBox.innerHTML = '';
+    lastDateStr = ''; // Reset date tracker before loading history
     history.forEach(data => {
         const isMine = data.nickname === myNickname;
         appendMessage(data, isMine);

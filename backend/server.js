@@ -24,14 +24,9 @@ const broadcastUserList = () => {
     io.emit('updateUserList', userList);
 };
 
-// Strict WIB Time formatter for server side (Asia/Jakarta)
+// Send full ISO string so frontend can extract both date and time for WIB
 const getWIBTime = () => {
-    return new Intl.DateTimeFormat('id-ID', {
-        timeZone: 'Asia/Jakarta',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    }).format(new Date());
+    return new Date().toISOString();
 };
 
 io.on('connection', (socket) => {
