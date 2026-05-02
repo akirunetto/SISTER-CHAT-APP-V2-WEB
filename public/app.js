@@ -1,4 +1,7 @@
-const socket = io("https://sister-chat-app-v2-web.up.railway.app"); // ⚠️ GANTI dengan Public Domain dari Railway (bukan .internal)
+const socket = io("https://sister-chat-app-v2-web.up.railway.app", {
+    // ⚠️ GANTI 'sister-chat-app-v2-web.up.railway.app' dengan Public Domain dari Railway-mu
+    transports: ['websocket', 'polling'] // Memastikan koneksi tidak diblokir oleh beberapa jenis proxy
+});
 
 // UI Elements
 const loginModal = document.getElementById('login-modal');
