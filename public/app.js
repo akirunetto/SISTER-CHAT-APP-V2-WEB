@@ -3,6 +3,41 @@ const socket = io("https://sister-chat-app-v2-web-production.up.railway.app", {
     reconnectionAttempts: 5
 });
 
+// Theme & Dark Mode Logic
+const themePink = document.getElementById('theme-pink');
+const themeGreen = document.getElementById('theme-green');
+const themeBlue = document.getElementById('theme-blue');
+const toggleDark = document.getElementById('toggle-dark');
+
+const applyTheme = (theme) => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('chat_theme', theme);
+};
+
+const applyDarkMode = (isDark) => {
+    if (isDark) {
+        document.documentElement.classList.add('dark');
+        toggleDark.textContent = '☀️';
+    } else {
+        document.documentElement.classList.remove('dark');
+        toggleDark.textContent = '🌙';
+    }
+    localStorage.setItem('chat_dark', isDark);
+};
+
+// Load preferences on startup
+const savedTheme = localStorage.getItem('chat_theme') || 'pink';
+const savedDark = localStorage.getItem('chat_dark') === 'true';
+applyTheme(savedTheme);
+applyDarkMode(savedDark);
+
+themePink.onclick = () => applyTheme('pink');
+themeGreen.onclick = () => applyTheme('green');
+themeBlue.onclick = () => applyTheme('blue');
+toggleDark.onclick = () => {
+    const isDark = document.documentElement.classList.contains('dark');
+    applyDarkMode(!isDark);
+};
 
 // UI Elements
 const loginModal = document.getElementById('login-modal');
@@ -23,15 +58,15 @@ const emojis = ['😀', '😂', '😍', '😭', '👍', '🙏', '🔥', '🎉', 
 
 // Initialize Emoji Picker
 emojis.forEach(emoji => {
-    const span = document.createElement('span');
-    span.textContent = emoji;
-    span.className = 'cursor-pointer text-2xl hover:scale-125 transition-transform text-center select-none';
-    span.onclick = () => {
+    const btn = document.createElement('button');
+    btn.textContent = emoji;
+    btn.className = 'win-btn w-8 h-8 flex items-center justify-center text-xl';
+    btn.onclick = () => {
         messageInput.value += emoji;
         emojiPicker.classList.add('hidden');
         messageInput.focus();
     };
-    emojiPicker.appendChild(span);
+    emojiPicker.appendChild(btn);
 });
 
 // Join Chat
@@ -41,15 +76,12 @@ const joinChat = () => {
         myNickname = nickname;
         socket.emit('join', nickname);
 
-        loginModal.classList.add('opacity-0', 'pointer-events-none');
-        setTimeout(() => {
-            loginModal.classList.add('hidden');
-            chatContainer.classList.remove('hidden');
-            chatContainer.classList.add('flex');
-            myNicknameDisplay.textContent = myNickname;
+        loginModal.classList.add('hidden');
+        chatContainer.classList.remove('hidden');
+        chatContainer.classList.add('flex');
+        myNicknameDisplay.textContent = myNickname;
 
-            setTimeout(() => messageInput.focus(), 100);
-        }, 300);
+        setTimeout(() => messageInput.focus(), 100);
     } else {
         alert("Please enter a nickname.");
     }
@@ -93,7 +125,7 @@ messageInput.addEventListener('keypress', (e) => {
 locationBtn.addEventListener('click', () => {
     if (navigator.geolocation) {
         locationBtn.disabled = true;
-        locationBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        locationBtn.textContent = '...';
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 socket.emit('locationShare', {
@@ -101,17 +133,17 @@ locationBtn.addEventListener('click', () => {
                     lon: position.coords.longitude
                 });
                 locationBtn.disabled = false;
-                locationBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                locationBtn.textContent = '📍';
             },
             (error) => {
-                alert("Unable to retrieve your location.");
+                alert("Unable to retrieve location.");
                 console.error(error);
                 locationBtn.disabled = false;
-                locationBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                locationBtn.textContent = '📍';
             }
         );
     } else {
-        alert("Geolocation is not supported by your browser.");
+        alert("Geolocation is not supported.");
     }
 });
 
@@ -120,66 +152,47 @@ const scrollToBottom = () => {
     chatBox.scrollTop = chatBox.scrollHeight;
 };
 
-// Helper: Create Message Bubble
+// Helper: Create Message Bubble (Retro Blocky Style)
 const appendMessage = (data, isMine) => {
     const wrapper = document.createElement('div');
-    wrapper.className = `flex w-full ${isMine ? 'justify-end' : 'justify-start'} animate-fade-in`;
+    wrapper.className = `flex w-full ${isMine ? 'justify-end' : 'justify-start'} mb-2`;
 
     const bubbleContainer = document.createElement('div');
-    bubbleContainer.className = `max-w-[75%] sm:max-w-[60%] flex flex-col ${isMine ? 'items-end' : 'items-start'}`;
+    bubbleContainer.className = `max-w-[85%] sm:max-w-[70%] flex flex-col ${isMine ? 'items-end' : 'items-start'}`;
 
     const metaInfo = document.createElement('span');
-    metaInfo.className = 'text-[11px] text-slate-500 mb-1 px-1 font-medium';
-    metaInfo.textContent = `${data.nickname} • ${data.timestamp}`;
+    metaInfo.className = 'text-[16px] text-[var(--win-text)] opacity-70 mb-1 px-1';
+    metaInfo.textContent = `${data.nickname} [${data.timestamp}]`;
 
     const bubble = document.createElement('div');
 
-    // Style logic
-    if (isMine) {
-        bubble.className = 'bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-2 shadow-sm break-words w-full text-sm sm:text-base';
-    } else {
-        bubble.className = 'bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-sm px-4 py-2 shadow-sm break-words w-full text-sm sm:text-base';
-    }
-
     if (data.type === 'location') {
-        // Hapus padding bawaan dan ubah style bubble khusus untuk location preview
-        bubble.className = `overflow-hidden rounded-2xl ${isMine ? 'rounded-tr-sm bg-blue-600 border border-blue-500' : 'rounded-tl-sm bg-white border border-slate-200'} shadow-md flex flex-col w-60 sm:w-64 transform transition hover:shadow-lg`;
-        
         const mapUrl = `https://www.google.com/maps?q=${data.lat},${data.lon}`;
+        bubble.className = `border-2 border-black break-words ${isMine ? 'bg-theme-bubbleMine text-[var(--win-text)]' : 'bg-theme-bubbleOther text-[var(--win-text)]'}`;
+        bubble.style.boxShadow = '3px 3px 0px rgba(0,0,0,1)';
         
         bubble.innerHTML = `
-            <a href="${mapUrl}" target="_blank" class="block w-full cursor-pointer group relative">
-                <!-- Peta Mockup / Preview Area -->
-                <div class="h-32 bg-slate-200 w-full relative overflow-hidden flex items-center justify-center">
-                    <div class="absolute inset-0 opacity-50 bg-[url('https://www.transparenttextures.com/patterns/cartographer.png')]"></div>
-                    <div class="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-emerald-400/20 mix-blend-multiply"></div>
-                    
-                    <!-- Pin Animasi -->
-                    <div class="z-10 transform group-hover:-translate-y-2 group-hover:scale-110 transition duration-300 drop-shadow-xl flex flex-col items-center">
-                        <span class="text-4xl">📍</span>
-                        <div class="w-4 h-1 bg-black/20 rounded-full mt-1 blur-[1px]"></div>
-                    </div>
+            <a href="${mapUrl}" target="_blank" class="block w-48 sm:w-64 cursor-pointer hover:bg-gray-200 transition-colors text-black bg-white">
+                <div class="h-24 flex items-center justify-center bg-[url('https://www.transparenttextures.com/patterns/pixels.png')] bg-gray-300 border-b-2 border-black">
+                    <span class="text-4xl hover:scale-125 transition-transform">📍</span>
                 </div>
-                
-                <!-- Keterangan Bawah -->
-                <div class="p-3 ${isMine ? 'bg-blue-600 text-white' : 'bg-white text-slate-800'} border-t ${isMine ? 'border-blue-500' : 'border-slate-100'}">
-                    <div class="font-bold text-sm mb-0.5 flex items-center gap-1.5">
-                        <span class="text-emerald-500">🌍</span> Location
-                    </div>
-                    <div class="text-[11px] opacity-80 truncate">
-                        ${data.lat.toFixed(5)}, ${data.lon.toFixed(5)}
-                    </div>
+                <div class="p-2">
+                    <div class="font-bold underline mb-1">MAP.EXE</div>
+                    <div class="text-base">LAT: ${data.lat.toFixed(4)}</div>
+                    <div class="text-base">LON: ${data.lon.toFixed(4)}</div>
                 </div>
             </a>
         `;
     } else {
+        bubble.className = `border-2 border-black px-3 py-1 break-words w-full text-xl ${isMine ? 'bg-theme-bubbleMine text-[var(--win-text)]' : 'bg-theme-bubbleOther text-[var(--win-text)]'}`;
+        bubble.style.boxShadow = '3px 3px 0px rgba(0,0,0,1)';
         bubble.textContent = data.message;
     }
 
     bubbleContainer.appendChild(metaInfo);
     bubbleContainer.appendChild(bubble);
     wrapper.appendChild(bubbleContainer);
-
+    
     chatBox.appendChild(wrapper);
     scrollToBottom();
 };
@@ -187,12 +200,12 @@ const appendMessage = (data, isMine) => {
 // Socket Listeners
 socket.on('systemMessage', (msg) => {
     const wrapper = document.createElement('div');
-    wrapper.className = 'flex justify-center w-full my-3 animate-fade-in';
-
+    wrapper.className = 'flex justify-center w-full my-3';
+    
     const bubble = document.createElement('div');
-    bubble.className = 'bg-slate-200 text-slate-600 text-[11px] font-semibold px-4 py-1.5 rounded-full shadow-inner tracking-wide';
-    bubble.textContent = msg;
-
+    bubble.className = 'bg-[var(--win-surface)] border-2 border-[var(--win-border-darker)] text-[var(--win-text)] text-[16px] px-3 py-1';
+    bubble.textContent = `*** ${msg} ***`;
+    
     wrapper.appendChild(bubble);
     chatBox.appendChild(wrapper);
     scrollToBottom();
@@ -207,16 +220,3 @@ socket.on('locationShare', (data) => {
     const isMine = data.nickname === myNickname;
     appendMessage(data, isMine);
 });
-
-// Add custom animation styles dynamically
-const style = document.createElement('style');
-style.innerHTML = `
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in {
-    animation: fadeIn 0.3s ease-out forwards;
-}
-`;
-document.head.appendChild(style);
