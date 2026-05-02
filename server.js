@@ -1,0 +1,64 @@
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const cors = require('cors');
+
+const app = express();
+app.use(cors());
+
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Enable CORS for all origins
+    methods: ["GET", "POST"]
+  }
+});
+
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
+
+  // 1. join
+  socket.on('join', (nickname) => {
+    socket.nickname = nickname;
+    // Broadcast system message to all other users
+    socket.broadcast.emit('systemMessage', `${nickname} has joined the chat`);
+  });
+
+  // 2. chatMessage
+  socket.on('chatMessage', (msg) => {
+    const timestamp = new Date().toLocaleTimeString();
+    // Broadcast to all clients (including sender)
+    io.emit('chatMessage', {
+      nickname: socket.nickname,
+      message: msg,
+      timestamp: timestamp
+    });
+  });
+
+  // 3. locationShare
+  socket.on('locationShare', (coords) => {
+    const timestamp = new Date().toLocaleTimeString();
+    // Broadcast to all clients (including sender)
+    io.emit('locationShare', {
+      nickname: socket.nickname,
+      lat: coords.lat,
+      lon: coords.lon,
+      timestamp: timestamp
+    });
+  });
+
+  // 4. disconnect
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+    if (socket.nickname) {
+      // Broadcast system message to all other users
+      socket.broadcast.emit('systemMessage', `${socket.nickname} has left the chat`);
+    }
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
